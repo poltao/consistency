@@ -1,0 +1,19 @@
+[workspace]
+members = ["paxoskv"]
+# 2021 版本之后对应的解析器版本，默认是 1
+resolver = "2"
+
+# 该部分用于配置项目在release构建时的一些参数
+[profile.release]
+# 指定代码生成单元的数量。代码生成单元是 Rust 编译器并行处理代码的单元。
+# 增加此值可以加快编译速度，但可能会增加最终可执行文件的大小。
+codegen-units = 1
+# 启用链接时优化（Link-Time Optimization，LTO）。
+# LTO 可以在链接阶段对整个程序进行优化，产生更高效的代码。但是，启用 LTO 会增加编译时间和可执行文件的大小。
+lto = true
+# 指定在发生 panic 时的行为。此处设置为 "abort"，表示在发生 panic 时立即终止程序。
+# 其他可能的值包括 "unwind"（使用堆栈展开）。
+panic = "abort"
+# 指定是否剥离可执行文件中的符号表。
+# 剥离符号表可以减小可执行文件的大小，但会使调试信息丢失，不利于调试程序。
+strip = true
