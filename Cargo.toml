@@ -1,5 +1,5 @@
 [workspace]
-members = ["paxoskv"]
+members = ["paxoskv", "grpc-demo"]
 # 2021 版本之后对应的解析器版本，默认是 1
 resolver = "2"
 
