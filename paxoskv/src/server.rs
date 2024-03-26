@@ -9,8 +9,8 @@ use crate::paxoskv::{
     Acceptor, BallotNum, PaxosInstanceId, Proposer,
 };
 
-const ACCEPTOR_BASE_PORT: i64 = 3333;
-const NOT_ENOUGH_QUORUM: &str = "Not enough acceptors to form a quorum";
+pub const ACCEPTOR_BASE_PORT: i64 = 3333;
+pub const NOT_ENOUGH_QUORUM: &str = "Not enough acceptors to form a quorum";
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("paxoskv_descriptor");
 
 #[derive(Clone, Debug)]
@@ -21,17 +21,17 @@ struct Version {
 impl Default for Version {
     fn default() -> Self {
         Version {
-            acceptor: Arc::new(Mutex::new(Acceptor {
-                last_bal: Some(BallotNum {
-                    n: 0,
-                    proposer_id: 0,
-                }),
-                v_bal: Some(BallotNum {
-                    n: 0,
-                    proposer_id: 0,
-                }),
-                val: None,
-            })),
+            acceptor: Arc::new(Mutex::new(Acceptor::new())),
+        }
+    }
+}
+
+impl Acceptor {
+    pub fn new() -> Self {
+        Acceptor {
+            last_bal: Some(BallotNum { n: 0, proposer_id: 0 }),
+            v_bal: Some(BallotNum { n: 0, proposer_id: 0 }),
+            val: None,
         }
     }
 }
@@ -71,12 +71,15 @@ impl BallotNum {
     pub fn ge(&self, other: &BallotNum) -> bool {
         self.n > other.n || (self.n == other.n && self.proposer_id >= other.proposer_id)
     }
+
+    pub fn less(&self, other: &BallotNum) -> bool {
+        self.n < other.n || (self.n == other.n && self.proposer_id < other.proposer_id)
+    }
 }
 
 #[tonic::async_trait]
 impl PaxosKv for KVServer {
     async fn prepare(&self, request: Request<Proposer>) -> Result<Response<Acceptor>, Status> {
-        println!("Acceptor: recv Prepare-request: {:?}", request);
         let proposer = request.into_inner();
 
         let version = self.get_mutex_version(proposer.id.clone()).await?;
@@ -91,15 +94,10 @@ impl PaxosKv for KVServer {
         if r_ballot.ge(acceptor.last_bal.as_ref().unwrap()) {
             acceptor.last_bal = Some(r_ballot);
         }
-        println!(
-            "KVServer storage: {:?}",
-            self.storage.lock().await.to_owned()
-        );
         Ok(Response::new(reply))
     }
 
     async fn accept(&self, request: Request<Proposer>) -> Result<Response<Acceptor>, Status> {
-        println!("Acceptor: recv Accept-request: {:?}", request);
         let proposer = request.into_inner();
 
         let version = self.get_mutex_version(proposer.id).await?;
@@ -119,8 +117,8 @@ impl PaxosKv for KVServer {
     }
 }
 
-async fn serve_acceptors(acceptor_ids: Vec<i64>) -> Result<(), Box<dyn std::error::Error>> {
-    for id in acceptor_ids {
+pub(crate) async fn serve_acceptors(acceptor_ids: &Vec<i64>) -> Result<(), Box<dyn std::error::Error>> {
+    for &id in acceptor_ids {
         let addr = format!("127.0.0.1:{}", ACCEPTOR_BASE_PORT + id).parse()?;
         let kv_server = KVServer::default();
         let reflection_service = tonic_reflection::server::Builder::configure()
@@ -129,23 +127,11 @@ async fn serve_acceptors(acceptor_ids: Vec<i64>) -> Result<(), Box<dyn std::erro
             .unwrap();
         tokio::spawn(async move {
             println!("Acceptors server listening on: {}", addr);
-            let exec_result = Server::builder()
-                .add_service(PaxosKvServer::new(kv_server))
-                .add_service(reflection_service)
-                .serve(addr)
-                .await;
+            let exec_result = Server::builder().add_service(PaxosKvServer::new(kv_server)).add_service(reflection_service).serve(addr).await;
             if let Err(e) = exec_result {
                 eprintln!("Failed to serve acceptor: {}", e);
             }
         });
     }
     Ok(())
-}
-
-// test serve_acceptors
-#[tokio::test]
-async fn test_serve_acceptors() {
-    let acceptor_ids = vec![1, 2, 3];
-    serve_acceptors(acceptor_ids).await.unwrap();
-    tokio::time::sleep(tokio::time::Duration::from_secs(3000)).await;
 }
