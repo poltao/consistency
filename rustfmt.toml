@@ -1,6 +1,6 @@
 # refer: https://rust-lang.github.io/rustfmt/?version=v1.6.0
 indent_style = "Block"
-max_width = 200
+max_width = 100
 fn_call_width = 200
 
 # import settings
