@@ -7,8 +7,8 @@ pub struct ElectResponse {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ElectRequest {
-    #[prost(int32, tag = "1")]
-    pub id: i32,
+    #[prost(uint32, tag = "1")]
+    pub id: u32,
     #[prost(uint64, tag = "2")]
     pub term: u64,
     #[prost(message, optional, tag = "3")]
@@ -17,8 +17,8 @@ pub struct ElectRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AppendLogRequest {
-    #[prost(int32, tag = "1")]
-    pub id: i32,
+    #[prost(uint32, tag = "1")]
+    pub id: u32,
     #[prost(uint64, tag = "2")]
     pub term: u64,
     #[prost(message, optional, tag = "3")]
@@ -49,31 +49,25 @@ pub struct LogId {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Configs {
-    #[prost(string, repeated, tag = "1")]
-    pub endpoint: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Log {
     #[prost(message, optional, tag = "1")]
     pub id: ::core::option::Option<LogId>,
     #[prost(string, tag = "2")]
     pub data: ::prost::alloc::string::String,
     /// 用于集群成员配置变更时
-    #[prost(message, repeated, tag = "3")]
-    pub configs: ::prost::alloc::vec::Vec<Configs>,
+    #[prost(string, repeated, tag = "3")]
+    pub configs: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 /// Generated client implementations.
-pub mod raft_kv_client {
+pub mod raft_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct RaftKvClient<T> {
+    pub struct RaftClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl RaftKvClient<tonic::transport::Channel> {
+    impl RaftClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -84,7 +78,7 @@ pub mod raft_kv_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> RaftKvClient<T>
+    impl<T> RaftClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -102,7 +96,7 @@ pub mod raft_kv_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> RaftKvClient<InterceptedService<T, F>>
+        ) -> RaftClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -116,7 +110,7 @@ pub mod raft_kv_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            RaftKvClient::new(InterceptedService::new(inner, interceptor))
+            RaftClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -163,9 +157,9 @@ pub mod raft_kv_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/raftkv.RaftKV/Elect");
+            let path = http::uri::PathAndQuery::from_static("/raft.Raft/Elect");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("raftkv.RaftKV", "Elect"));
+            req.extensions_mut().insert(GrpcMethod::new("raft.Raft", "Elect"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn append_log(
@@ -185,20 +179,20 @@ pub mod raft_kv_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/raftkv.RaftKV/AppendLog");
+            let path = http::uri::PathAndQuery::from_static("/raft.Raft/AppendLog");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("raftkv.RaftKV", "AppendLog"));
+            req.extensions_mut().insert(GrpcMethod::new("raft.Raft", "AppendLog"));
             self.inner.unary(req, path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod raft_kv_server {
+pub mod raft_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with RaftKvServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with RaftServer.
     #[async_trait]
-    pub trait RaftKv: Send + Sync + 'static {
+    pub trait Raft: Send + Sync + 'static {
         async fn elect(
             &self,
             request: tonic::Request<super::ElectRequest>,
@@ -212,7 +206,7 @@ pub mod raft_kv_server {
         >;
     }
     #[derive(Debug)]
-    pub struct RaftKvServer<T: RaftKv> {
+    pub struct RaftServer<T: Raft> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
@@ -220,7 +214,7 @@ pub mod raft_kv_server {
         max_encoding_message_size: Option<usize>,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: RaftKv> RaftKvServer<T> {
+    impl<T: Raft> RaftServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -272,9 +266,9 @@ pub mod raft_kv_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for RaftKvServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for RaftServer<T>
     where
-        T: RaftKv,
+        T: Raft,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -290,10 +284,10 @@ pub mod raft_kv_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/raftkv.RaftKV/Elect" => {
+                "/raft.Raft/Elect" => {
                     #[allow(non_camel_case_types)]
-                    struct ElectSvc<T: RaftKv>(pub Arc<T>);
-                    impl<T: RaftKv> tonic::server::UnaryService<super::ElectRequest>
+                    struct ElectSvc<T: Raft>(pub Arc<T>);
+                    impl<T: Raft> tonic::server::UnaryService<super::ElectRequest>
                     for ElectSvc<T> {
                         type Response = super::ElectResponse;
                         type Future = BoxFuture<
@@ -306,7 +300,7 @@ pub mod raft_kv_server {
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as RaftKv>::elect(&inner, request).await
+                                <T as Raft>::elect(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -334,10 +328,10 @@ pub mod raft_kv_server {
                     };
                     Box::pin(fut)
                 }
-                "/raftkv.RaftKV/AppendLog" => {
+                "/raft.Raft/AppendLog" => {
                     #[allow(non_camel_case_types)]
-                    struct AppendLogSvc<T: RaftKv>(pub Arc<T>);
-                    impl<T: RaftKv> tonic::server::UnaryService<super::AppendLogRequest>
+                    struct AppendLogSvc<T: Raft>(pub Arc<T>);
+                    impl<T: Raft> tonic::server::UnaryService<super::AppendLogRequest>
                     for AppendLogSvc<T> {
                         type Response = super::AppendLogResponse;
                         type Future = BoxFuture<
@@ -350,7 +344,7 @@ pub mod raft_kv_server {
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as RaftKv>::append_log(&inner, request).await
+                                <T as Raft>::append_log(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -393,7 +387,7 @@ pub mod raft_kv_server {
             }
         }
     }
-    impl<T: RaftKv> Clone for RaftKvServer<T> {
+    impl<T: Raft> Clone for RaftServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -405,7 +399,7 @@ pub mod raft_kv_server {
             }
         }
     }
-    impl<T: RaftKv> Clone for _Inner<T> {
+    impl<T: Raft> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(Arc::clone(&self.0))
         }
@@ -415,7 +409,7 @@ pub mod raft_kv_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: RaftKv> tonic::server::NamedService for RaftKvServer<T> {
-        const NAME: &'static str = "raftkv.RaftKV";
+    impl<T: Raft> tonic::server::NamedService for RaftServer<T> {
+        const NAME: &'static str = "raft.Raft";
     }
 }

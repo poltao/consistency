@@ -1,7 +1,7 @@
 syntax = "proto3";
-package raftkv;
+package raft;
 
-service RaftKV {
+service Raft {
     rpc Elect (ElectRequest) returns (ElectResponse) {}
     rpc AppendLog (AppendLogRequest) returns (AppendLogResponse) {}
 }
@@ -11,7 +11,7 @@ message ElectResponse {
 }
 
 message ElectRequest {
-    int32 id = 1;
+    uint32 id = 1;
 
     uint64 term = 2;
 
@@ -19,7 +19,7 @@ message ElectRequest {
 }
 
 message AppendLogRequest {
-    int32 id = 1;
+    uint32 id = 1;
 
     uint64 term = 2;
 
@@ -45,13 +45,9 @@ message LogId {
     uint64 index = 2;
 }
 
-message Configs {
-    repeated string endpoint = 1;
-}
-
 message Log {
     LogId id = 1;
     string data = 2;
     // 用于集群成员配置变更时
-    repeated Configs configs = 3;
+    repeated string configs = 3;
 }

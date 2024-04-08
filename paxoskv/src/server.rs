@@ -127,7 +127,8 @@ pub(crate) async fn serve_acceptors(acceptor_ids: &Vec<i64>) -> Result<(), Box<d
             .unwrap();
         tokio::spawn(async move {
             println!("Acceptors server listening on: {}", addr);
-            let exec_result = Server::builder().add_service(PaxosKvServer::new(kv_server)).add_service(reflection_service).serve(addr).await;
+            let exec_result = Server::builder()
+            .add_service(PaxosKvServer::new(kv_server)).add_service(reflection_service).serve(addr).await;
             if let Err(e) = exec_result {
                 eprintln!("Failed to serve acceptor: {}", e);
             }
